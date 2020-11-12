@@ -35,7 +35,7 @@ namespace TestRestSharp
             //executing the request using client and saving the result in IrestResponse.
             IRestResponse response = client.Execute(request);
             return response;
-            
+
         }
         /// <summary>
         /// Ons the calling get API return employee list.
@@ -56,7 +56,7 @@ namespace TestRestSharp
                 Console.WriteLine("Id: " + employee.id + " Name: " + employee.FirstName + " Salary: " + employee.salary);
             }
             //assert for checking count of no of element in list to be equal to data in jsonserver table.
-            Assert.AreEqual(4, dataResponse.Count);
+            Assert.AreEqual(3, dataResponse.Count);
         }
         /// <summary>
         /// Givens the employee on post should return added employee. UC2
@@ -68,23 +68,62 @@ namespace TestRestSharp
             Employee employee = new Employee { FirstName = "Rashid", salary = "500000" };
             //adding request to post(add) data
             RestRequest request = new RestRequest("/employees", Method.POST);
+            //instatiating jObject for adding data for name and salary, id auto increments
+            JObject jObject = new JObject();
+            jObject.Add("FirstName", employee.FirstName);
+            jObject.Add("salary", employee.salary);
+            //as parameters are passed as body hence "request body" call is made, in parameter type
+            request.AddParameter("application/json", jObject, ParameterType.RequestBody);
+            ///Act
+            /// response will contain the data which is added and not all the data from jsonserver.
+            ///data is added to json server json file in this step.
+            IRestResponse response = client.Execute(request);
+            ///Assert
+            ///code will be 201 for posting data
+            Assert.AreEqual(response.StatusCode, System.Net.HttpStatusCode.Created);
+            //derserializing object for assert and checking test case
+            Employee dataResponse = JsonConvert.DeserializeObject<Employee>(response.Content);
+            Assert.AreEqual(employee.FirstName, dataResponse.FirstName);
+            Console.WriteLine(response.Content);
+
+        }
+        /// <summary>
+        /// UC3
+        /// Givens the employee on post should return added employee
+        /// </summary>
+        [TestMethod]
+        public void GivenEmployeeList_OnPost_ShouldReturnAddedEmployee()
+        {
+            //adding multiple employees to table
+            List<Employee> employeeList = new List<Employee>();
+            employeeList.Add(new Employee { FirstName = "David", salary = "600000" });
+            employeeList.Add(new Employee { FirstName = "Kane", salary = "500000" });
+            employeeList.ForEach(employeeData =>
+            {
+                //arrange
+                //adding request to post(add) data
+                RestRequest request = new RestRequest("/employees", Method.POST);
+
                 //instatiating jObject for adding data for name and salary, id auto increments
                 JObject jObject = new JObject();
-                jObject.Add("FirstName", employee.FirstName);
-                jObject.Add("salary", employee.salary);
+                jObject.Add("FirstName", employeeData.FirstName);
+                jObject.Add("salary", employeeData.salary);
                 //as parameters are passed as body hence "request body" call is made, in parameter type
                 request.AddParameter("application/json", jObject, ParameterType.RequestBody);
-                ///Act
-                /// response will contain the data which is added and not all the data from jsonserver.
-                ///data is added to json server json file in this step.
+                //Act
+                //request contains method of post and along with added parameter which contains data to be added
+                //hence response will contain the data which is added and not all the data from jsonserver.
+                //data is added to json server json file in this step.
                 IRestResponse response = client.Execute(request);
-                ///Assert
-                ///code will be 201 for posting data
+                //assert
+                //code will be 201 for posting data
                 Assert.AreEqual(response.StatusCode, System.Net.HttpStatusCode.Created);
                 //derserializing object for assert and checking test case
-                Employee dataResponse = JsonConvert.DeserializeObject<Employee>(response.Content);
-                Assert.AreEqual(employee.FirstName, dataResponse.FirstName);
+                IRestResponse response1 = GetEmployeeList();
+                List<Employee> dataResponse = JsonConvert.DeserializeObject<List<Employee>>(response1.Content);
+                Assert.AreEqual(6, dataResponse.Count);
                 Console.WriteLine(response.Content);
+            });
 
         }
     }
