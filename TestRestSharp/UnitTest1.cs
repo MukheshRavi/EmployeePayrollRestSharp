@@ -126,5 +126,31 @@ namespace TestRestSharp
             });
 
         }
+        /// <summary>
+        /// Givens the employee on update should return updated employee. UC4
+        /// </summary>
+        [TestMethod]
+        public void GivenEmployee_OnUpdate_ShouldReturnUpdatedEmployee()
+        {
+            //making a request for a particular employee to be updated
+            RestRequest request = new RestRequest("employees/1", Method.PUT);
+            //creating a jobject for new data to be added in place of old
+            JObject jobject = new JObject();
+            jobject.Add("FirstName","Manish");
+            jobject.Add("salary", 500000);
+            //adding parameters in request
+            //request body parameter type signifies values added using add.
+            request.AddParameter("application/json", jobject, ParameterType.RequestBody);
+            //executing request using client
+            IRestResponse response = client.Execute(request);
+            //checking status code of response
+            Assert.AreEqual(response.StatusCode, System.Net.HttpStatusCode.OK);
+            //deserializing content added in json file
+            Employee dataResponse = JsonConvert.DeserializeObject<Employee>(response.Content);
+            //asserting for salary
+            Assert.AreEqual(dataResponse.salary, "500000");
+            //writing content without deserializing from resopnse. 
+            Console.WriteLine(response.Content);
+        }
     }
 }
